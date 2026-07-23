@@ -1,0 +1,1674 @@
+<!DOCTYPE html>
+<html lang="th" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>CozyDesk AI — Powered by Google Gemini 2.5 Flash</title>
+
+  <!-- Google Fonts & Tailwind CSS -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            moon: {
+              bg: '#0B132B',
+              card: '#1C2541',
+              border: '#3A506B',
+              text: '#FFFFFF',
+              subtext: '#CBD5E1',
+              accent: '#FFD166'
+            }
+          },
+          fontFamily: {
+            sans: ['Prompt', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- PDF.js CDN for extracting text from PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Prompt', sans-serif;
+      transition: background 0.4s ease, color 0.3s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* PRESET THEMES */
+    .theme-moonlit {
+      background: linear-gradient(135deg, #0B132B 0%, #1C2541 100%);
+      color: #FFFFFF;
+    }
+    .theme-moonlit .cozy-card {
+      background-color: rgba(28, 37, 65, 0.92);
+      border-color: #3A506B;
+      color: #FFFFFF;
+    }
+
+    .theme-daylight {
+      background: linear-gradient(135deg, #E0F2FE 0%, #DCFCE7 100%);
+      color: #1E293B;
+    }
+    .theme-daylight .cozy-card {
+      background-color: rgba(255, 255, 255, 0.95);
+      border-color: #BAE6FD;
+      color: #0F172A;
+    }
+
+    .theme-milktea {
+      background: linear-gradient(135deg, #FDF6EC 0%, #E6C5A8 100%);
+      color: #4A2E18;
+    }
+    .theme-milktea .cozy-card {
+      background-color: rgba(255, 255, 255, 0.95);
+      border-color: #D4B296;
+      color: #3D2312;
+    }
+
+    .theme-pastel {
+      background: linear-gradient(135deg, #FCE7F3 0%, #DDD6FE 100%);
+      color: #4C1D95;
+    }
+    .theme-pastel .cozy-card {
+      background-color: rgba(255, 255, 255, 0.95);
+      border-color: #FBCFE8;
+      color: #3730A3;
+    }
+
+    .theme-sunset {
+      background: linear-gradient(135deg, #FFEDD5 0%, #FDE68A 50%, #BAE6FD 100%);
+      color: #1E293B;
+    }
+    .theme-sunset .cozy-card {
+      background-color: rgba(255, 255, 255, 0.95);
+      border-color: #FDBA74;
+      color: #0F172A;
+    }
+
+    /* CUSTOM USER WALLPAPER BACKDROP */
+    .theme-custom-wallpaper {
+      background-size: cover !important;
+      background-position: center !important;
+      background-repeat: no-repeat !important;
+      background-attachment: fixed !important;
+      color: #FFFFFF;
+    }
+    .theme-custom-wallpaper .cozy-card {
+      background-color: rgba(15, 23, 42, 0.82);
+      backdrop-filter: blur(12px);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: #FFFFFF;
+    }
+
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.3); border-radius: 10px; }
+  </style>
+</head>
+<body id="appBody" class="theme-moonlit h-full flex flex-col overflow-hidden select-none">
+
+  <!-- TOP HEADER BAR WITH GOOGLE GEMINI BRANDING & API KEY MANAGER -->
+  <header class="h-16 border-b border-white/10 bg-black/20 backdrop-blur-md px-3 sm:px-4 flex items-center justify-between shrink-0 z-40">
+    <div class="flex items-center gap-2 sm:gap-3">
+      <span class="text-xl sm:text-2xl animate-bounce cursor-pointer select-none" id="headerPetIcon" onclick="clickPetToInteract()">🧶🐱</span>
+      <div>
+        <h1 class="font-bold text-xs sm:text-base leading-tight tracking-wide flex items-center gap-1.5 sm:gap-2">
+          CozyDesk AI
+          <span class="text-[8px] sm:text-[9px] bg-gradient-to-r from-blue-500 via-indigo-500 to-amber-400 text-white px-2 py-0.5 rounded-full font-black shadow-sm flex items-center gap-1">
+            <span>✨</span> <span>Google Gemini 2.5</span>
+          </span>
+        </h1>
+        <p class="text-[9px] sm:text-[10px] opacity-75 font-light truncate max-w-[120px] sm:max-w-none" data-i18n="navSubtitle">Powered by Google AI & Gemini Ecosystem</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-1.5 sm:gap-2">
+      <!-- Wallet Coins -->
+      <div class="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl sm:rounded-2xl bg-amber-400/20 border border-amber-300/40 shadow-sm">
+        <span class="text-xs sm:text-sm">🪙</span>
+        <span id="coinBalance" class="text-[11px] sm:text-xs font-bold text-amber-300">180</span>
+      </div>
+
+      <!-- Gemini API Key Setup Button -->
+      <button 
+        onclick="openApiKeyModal()" 
+        id="btnApiKeyStatus"
+        class="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-bold text-[11px] sm:text-xs shadow-md transition flex items-center gap-1.5 border border-blue-300/40"
+        title="ตั้งค่า Google Gemini API Key เพื่อเปิดใช้งาน AI"
+      >
+        <span>🔑</span> <span id="lblApiKeyStatusText" class="hidden sm:inline">ตั้งค่า API Key</span>
+      </button>
+
+      <!-- Language Switcher Dropdown -->
+      <div class="relative">
+        <button onclick="toggleLangDropdown()" class="px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-semibold bg-white/10 hover:bg-white/20 border border-white/20 transition flex items-center gap-1">
+          🌐 <span id="currentLangLabel">TH</span>
+        </button>
+        <div id="langDropdown" class="hidden absolute right-0 mt-2 w-36 bg-slate-900 border border-slate-700 text-white rounded-2xl shadow-xl z-50 overflow-hidden text-xs">
+          <button onclick="switchLanguage('th')" class="w-full text-left px-4 py-2 hover:bg-slate-800 transition flex justify-between"><span>ไทย</span><span class="text-[10px] opacity-60">TH</span></button>
+          <button onclick="switchLanguage('en')" class="w-full text-left px-4 py-2 hover:bg-slate-800 transition flex justify-between"><span>English</span><span class="text-[10px] opacity-60">EN</span></button>
+          <button onclick="switchLanguage('zh')" class="w-full text-left px-4 py-2 hover:bg-slate-800 transition flex justify-between"><span>中文</span><span class="text-[10px] opacity-60">ZH</span></button>
+          <button onclick="switchLanguage('ja')" class="w-full text-left px-4 py-2 hover:bg-slate-800 transition flex justify-between"><span>日本語</span><span class="text-[10px] opacity-60">JA</span></button>
+          <button onclick="switchLanguage('ko')" class="w-full text-left px-4 py-2 hover:bg-slate-800 transition flex justify-between"><span>한국어</span><span class="text-[10px] opacity-60">KO</span></button>
+        </div>
+      </div>
+
+      <!-- Shop Button -->
+      <button onclick="openShopModal()" class="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-amber-300 hover:bg-amber-400 text-slate-950 font-bold text-[11px] sm:text-xs shadow-md transition flex items-center gap-1">
+        🛒 <span data-i18n="btnShop" class="hidden sm:inline">ร้านค้า</span>
+      </button>
+
+      <!-- Theme & Wallpaper Picker Button -->
+      <button onclick="openThemeModal()" class="p-1.5 sm:p-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 transition text-xs font-bold" title="เลือกธีม/วอลเปเปอร์">🎨</button>
+
+      <!-- Dynamic Auth User Button -->
+      <button id="btnHeaderAuth" onclick="openAuthModal()" class="flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-2xl bg-white hover:bg-slate-100 text-slate-900 font-bold text-xs shadow-md transition border border-slate-300">
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN INTERACTIVE WRAPPER -->
+  <div class="flex-1 flex overflow-hidden relative">
+
+    <!-- DESKTOP NAV SIDEBAR -->
+    <aside class="hidden md:flex w-64 lg:w-72 border-r border-white/10 bg-black/10 backdrop-blur-sm flex-col justify-between p-4 shrink-0">
+      <nav class="space-y-2">
+        <button onclick="switchTab('workspace')" id="sideTabWorkspace" class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-amber-300 text-slate-950 font-bold text-sm shadow-sm transition text-left">
+          <i data-lucide="shield" class="w-5 h-5 shrink-0"></i>
+          <div>
+            <span class="block" data-i18n="vaultTabTitle">1. Google Gemini Vault</span>
+            <span class="text-[9px] opacity-75 font-normal">ย่อยสรุปไฟล์ด้วย Google Gemini AI</span>
+          </div>
+        </button>
+
+        <!-- FIREPLACE COZY CHAT TAB WITH GOOGLE SEARCH GROUNDING -->
+        <button onclick="switchTab('fireplace')" id="sideTabFireplace" class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl opacity-80 hover:opacity-100 hover:bg-white/10 font-medium text-sm transition text-left">
+          <i data-lucide="flame" class="w-5 h-5 shrink-0 text-orange-400"></i>
+          <div>
+            <span class="block text-amber-300 font-bold flex items-center gap-1">
+              <span>2. พักใจข้างเตาผิง</span>
+              <span class="text-[8px] bg-blue-500 text-white px-1.5 py-0.2 rounded font-extrabold">Google Search</span>
+            </span>
+            <span class="text-[9px] opacity-75 font-normal">คุยทั่วไป ข่าวดารา ดูดวง สภาพอากาศ</span>
+          </div>
+        </button>
+
+        <button onclick="switchTab('studyhub')" id="sideTabStudyhub" class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl opacity-80 hover:opacity-100 hover:bg-white/10 font-medium text-sm transition text-left">
+          <i data-lucide="book-open" class="w-5 h-5 shrink-0"></i>
+          <div>
+            <span class="block" data-i18n="studyTabTitle">3. Open Study Hub</span>
+            <span class="text-[9px] opacity-75 font-normal">คลังความรู้สาธารณะเพื่อความเท่าเทียม</span>
+          </div>
+        </button>
+        <button onclick="switchTab('burnout')" id="sideTabBurnout" class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl opacity-80 hover:opacity-100 hover:bg-white/10 font-medium text-sm transition text-left">
+          <i data-lucide="heart-pulse" class="w-5 h-5 shrink-0"></i>
+          <div>
+            <span class="block" data-i18n="burnoutTabTitle">4. Burnout & Focus Net</span>
+            <span class="text-[9px] opacity-75 font-normal">เครือข่ายสุขภาวะและโฟกัสแห่งชาติ</span>
+          </div>
+        </button>
+      </nav>
+
+      <!-- AUDIO & LOFI PLAYER -->
+      <div class="p-4 rounded-3xl cozy-card border border-white/10 space-y-3 shadow-lg">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-amber-300" data-i18n="lblAudioHeader">🎧 Lofi Ambient Sound</span>
+          <span id="musicPulse" class="w-2 h-2 rounded-full bg-slate-500"></span>
+        </div>
+        <div class="space-y-1">
+          <label class="text-[10px] opacity-75 block">เลือกเพลง MP3 ส่วนตัวจากเครื่อง:</label>
+          <input type="file" id="customAudioFile" accept="audio/*" onchange="handleCustomAudioUpload(event)" class="w-full text-[10px] opacity-75 file:py-1 file:px-2 file:rounded-lg file:border-0 file:bg-amber-300 file:text-slate-950 cursor-pointer" />
+        </div>
+        <audio id="localAudioPlayer" loop class="hidden"></audio>
+        <button onclick="toggleBuiltInMusic()" id="btnMusicPlay" class="w-full py-2 rounded-xl bg-amber-300/20 text-amber-300 text-xs font-bold transition flex items-center justify-center gap-2">
+          <span data-i18n="btnPlayMusic">▶️ เล่นเพลงสมาธิ Lofi</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN SCROLLABLE CONTAINER -->
+    <main class="flex-1 overflow-y-auto p-3 sm:p-5 md:p-6 no-scrollbar pb-24 md:pb-6">
+      
+      <!-- VIEW 1: SECURE VAULT & GOOGLE GEMINI SUMMARIZER -->
+      <div id="viewWorkspace" class="space-y-4 sm:space-y-6 max-w-5xl mx-auto">
+        
+        <!-- MASCOT BANNER WITH GOOGLE GEMINI CORE BADGE -->
+        <div class="p-4 sm:p-6 rounded-3xl cozy-card border border-white/10 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+          <div class="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+            <div id="petAvatar" class="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-amber-300/20 flex items-center justify-center text-2xl sm:text-3xl shadow-inner cursor-pointer hover:scale-110 transition shrink-0" onclick="clickPetToInteract()">
+              🧶🐱
+            </div>
+            <div class="flex-1">
+              <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                <h2 class="text-xs sm:text-base font-bold flex items-center gap-1">
+                  <span>ผู้ช่วย AI:</span>
+                  <span id="lblMascotName" class="text-amber-300 font-extrabold">โคดี้ (Cody)</span>
+                  <button onclick="openRenameMascotModal()" class="text-[10px] bg-white/10 hover:bg-white/20 px-1.5 py-0.5 rounded-md text-amber-200 transition" title="ตั้งชื่อน้อง AI ใหม่">✏️ แก้ชื่อ</button>
+                </h2>
+                <span class="text-[9px] bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-2 py-0.5 rounded-full font-bold shadow-sm" id="petLevelBadge">Google Gemini 2.5 Core 🐾</span>
+              </div>
+              <div class="w-full sm:w-48 bg-black/20 h-1.5 sm:h-2 rounded-full mt-1.5 overflow-hidden border border-white/10">
+                <div id="petExpBar" class="bg-amber-300 h-full w-[30%] transition-all duration-500"></div>
+              </div>
+              <p class="text-[10px] sm:text-xs opacity-80 mt-1" id="petBubble">"ยินดีต้อนรับครับ! น้อนใช้ขุมพลัง Google Gemini 2.5 Flash ช่วยย่อยสรุปไฟล์และรูปภาพให้คุณได้อย่างรวดเร็วและปลอดภัยครับ ✨"</p>
+            </div>
+          </div>
+          <div class="flex gap-2 w-full sm:w-auto justify-end border-t sm:border-0 border-white/10 pt-2 sm:pt-0">
+            <button onclick="openShopModal()" class="px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl sm:rounded-2xl bg-amber-300 text-slate-950 text-[11px] sm:text-xs font-bold" data-i18n="btnShop">🛒 ร้านค้าของแต่ง</button>
+            <button onclick="triggerMemeBreak()" class="px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl sm:rounded-2xl bg-white/10 text-[11px] sm:text-xs font-semibold" data-i18n="btnBreakMeme">🤪 พักสายตา</button>
+          </div>
+        </div>
+
+        <!-- DEKSTOP DECORATION SHELF -->
+        <div class="p-3.5 sm:p-4 rounded-3xl cozy-card border border-white/10 shadow-md">
+          <div class="flex items-center justify-between mb-2.5 px-1">
+            <h4 class="text-[11px] sm:text-xs font-bold opacity-80 uppercase" data-i18n="roomDecorTitle">🛋️ ชั้นวางของตกแต่งโต๊ะทำงาน</h4>
+            <span class="text-[9px] sm:text-[10px] font-bold text-amber-300" id="lblDecorCount">ปลดล็อกแล้ว 2 ชิ้น</span>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 text-center" id="desktopDecorShelf"></div>
+        </div>
+
+        <!-- SUMMARIZER & FOCUS TIMER GRID -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div class="lg:col-span-2 space-y-4 sm:space-y-6">
+            <div class="p-4 sm:p-6 rounded-3xl cozy-card border border-white/10 shadow-lg space-y-3 sm:space-y-4">
+              <h3 class="font-bold text-xs sm:text-base flex items-center justify-between">
+                <span class="flex items-center gap-1.5 sm:gap-2">
+                  🛡️ <span>Google Gemini Vault & Summarizer</span>
+                </span>
+                <span class="text-[9px] bg-blue-500/20 text-blue-300 border border-blue-400/30 px-2 py-0.5 rounded-md font-extrabold">Gemini 2.5 Flash</span>
+              </h3>
+
+              <!-- DROPZONE FOR ALL FILES (PDF, TEXT, IMAGE) -->
+              <div id="dropZone" class="border-2 border-dashed border-amber-300/40 rounded-2xl p-5 sm:p-8 text-center bg-white/5 hover:bg-white/10 transition cursor-pointer relative group">
+                <input type="file" id="fileInput" accept="image/*,.pdf,.txt,.md,.csv,.json,.js,.html,.py" class="absolute inset-0 opacity-0 cursor-pointer z-10" onchange="processFileWithRewards(event)" />
+                <div class="w-10 h-10 sm:w-14 sm:h-14 mx-auto mb-2 sm:mb-3 rounded-2xl bg-blue-500/20 text-blue-300 flex items-center justify-center text-xl sm:text-2xl">⚡</div>
+                <p class="font-bold text-xs sm:text-sm">วางเอกสาร PDF / สัญญา / รูปภาพ / บิล เพื่อให้ Google Gemini สรุปเนื้อหา</p>
+                <p class="text-[9px] sm:text-[10px] opacity-75 mt-1">ประมวลผลด้วย Google Generative AI API สรุปตรงจุด พร้อมอ้างอิง</p>
+              </div>
+
+              <!-- LOADING INDICATOR -->
+              <div id="summarizerLoading" class="hidden py-6 text-center space-y-2 sm:space-y-3">
+                <div class="w-8 h-8 sm:w-10 sm:h-10 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                <p class="text-xs font-semibold text-blue-300">กำลังย่อยสรุปไฟล์และรูปภาพด้วย Google Gemini 2.5 Flash...</p>
+              </div>
+
+              <!-- SUMMARY RESULTS -->
+              <div id="summaryResultsContainer" class="space-y-3 sm:space-y-4"></div>
+
+              <!-- CHAT WITH AI COMPANION FOR REVIEW -->
+              <div id="chatContainer" class="hidden pt-4 border-t border-white/10 space-y-3">
+                <div class="flex items-center justify-between">
+                  <h4 class="font-bold text-xs text-amber-300 flex items-center gap-1.5">
+                    <span>💬 คุยทบทวนความถูกต้องกับ</span>
+                    <span id="lblChatPetName" class="underline">โคดี้ (Cody)</span>
+                  </h4>
+                  <span class="text-[9px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-md font-semibold">Powered by Google Gemini</span>
+                </div>
+
+                <div id="chatFeed" class="max-h-56 overflow-y-auto space-y-2 text-xs bg-black/25 p-3 rounded-2xl border border-white/10"></div>
+                
+                <form onsubmit="handleChatSubmit(event)" class="flex gap-2">
+                  <input type="text" id="chatInput" placeholder="พิมพ์ถามคำถามเพื่อทบทวนเนื้อหาไฟล์นี้..." class="flex-1 px-3 py-2 bg-black/40 border border-white/20 rounded-xl text-xs text-white outline-none focus:border-amber-300" />
+                  <button type="submit" id="btnSendChat" class="px-3 py-2 bg-amber-300 text-slate-950 font-bold text-xs rounded-xl">ถาม AI</button>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- FOCUS TIMER WIDGET -->
+          <div class="space-y-4 sm:space-y-6">
+            <div class="p-4 sm:p-5 rounded-3xl cozy-card border border-white/10 shadow-lg space-y-3">
+              <h4 class="font-bold text-xs sm:text-sm" data-i18n="focusTimerTitle">⏳ กำหนดเวลาโฟกัส (Focus Timer)</h4>
+              <div class="flex items-center justify-center gap-2">
+                <label class="text-xs opacity-75" data-i18n="lblMinutes">นาที:</label>
+                <input type="number" id="customMinutesInput" value="25" min="1" max="180" class="w-16 px-2 py-1 bg-black/25 border border-white/20 rounded-xl text-center text-xs font-bold text-white">
+                <button onclick="setCustomTimerMinutes()" class="px-2.5 py-1 bg-white/20 text-xs font-semibold rounded-xl" data-i18n="btnSet">ตั้ง</button>
+              </div>
+              <div class="text-center py-3 sm:py-4 bg-black/25 rounded-2xl border border-white/10">
+                <div class="text-2xl sm:text-3xl font-extrabold tracking-widest text-amber-300" id="timerClock">25:00</div>
+              </div>
+              <div class="flex gap-2">
+                <button onclick="startFocusTimer()" class="flex-1 py-2 sm:py-2.5 rounded-xl bg-amber-300 text-slate-950 font-extrabold text-xs shadow active:scale-95 transition" data-i18n="btnStart">เริ่มโฟกัส</button>
+                <button onclick="resetFocusTimer()" class="px-3 py-2 rounded-xl bg-white/10 text-xs" data-i18n="btnReset">รีเซ็ต</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 2: FIREPLACE COZY CHAT (WITH GOOGLE SEARCH GROUNDING) -->
+      <div id="viewFireplace" class="hidden space-y-4 sm:space-y-6 max-w-4xl mx-auto">
+        <div class="p-4 sm:p-6 rounded-3xl bg-gradient-to-r from-amber-950/80 via-rose-950/70 to-slate-900 border border-orange-500/30 shadow-2xl space-y-4 relative overflow-hidden">
+          
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-orange-500/20 pb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-2xl bg-orange-500/20 border border-orange-400/40 flex items-center justify-center text-2xl shadow-inner animate-pulse">
+                🔥
+              </div>
+              <div>
+                <h2 class="text-sm sm:text-lg font-bold text-amber-300 flex items-center gap-2">
+                  <span>พื้นที่พักใจข้างเตาผิง (Fireplace Cozy Corner)</span>
+                </h2>
+                <p class="text-[10px] sm:text-xs text-amber-200/80 font-light">
+                  ชวนคุยได้ทุกเรื่อง ทั้งข่าวดารา สภาพอากาศ ดูดวง ไพ่ยิปซี ด้วยขุมพลัง Google Search Real-time
+                </p>
+              </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] bg-blue-500/20 text-blue-300 px-2.5 py-1 rounded-xl font-bold border border-blue-400/30 flex items-center gap-1">
+                <span>🌐</span> <span>Google Search Grounding</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Quick Topic Prompts -->
+          <div class="flex flex-wrap gap-2 text-xs">
+            <span class="text-[10px] text-amber-200/70 self-center font-bold">💡 ไอเดียชวนคุย:</span>
+            <button onclick="sendFireplacePrompt('ช่วยดูดวงการเรียนและการทำงานให้หน่อยวันนี้')" class="px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-amber-200 border border-white/10 transition">🔮 ดูดวงประจำวัน</button>
+            <button onclick="sendFireplacePrompt('วันนี้สภาพอากาศในกรุงเทพและประเทศไทยเป็นยังไงบ้าง')" class="px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-amber-200 border border-white/10 transition">🌤️ เช็กสภาพอากาศ real-time</button>
+            <button onclick="sendFireplacePrompt('มีข่าวดาราหรือเรื่องบันเทิงน่าสนใจล่าสุดช่วงนี้ไหม')" class="px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-amber-200 border border-white/10 transition">🎬 เม้าท์ข่าวดาราเรียลไทม์</button>
+            <button onclick="sendFireplacePrompt('เหนื่อยจัง ขอคำอวยพรหรือกำลังใจหน่อย')" class="px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-amber-200 border border-white/10 transition">💖 ขอกำลังใจฮีลใจ</button>
+          </div>
+
+          <!-- Chat Messages Window -->
+          <div id="fireplaceChatFeed" class="h-80 overflow-y-auto space-y-3 p-3.5 bg-black/40 rounded-2xl border border-orange-500/20 text-xs">
+            <div class="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-200 space-y-1">
+              <div class="font-bold text-amber-300 flex items-center justify-between">
+                <span class="flex items-center gap-1.5">
+                  <span id="fireplaceMascotEmoji">🧶🐱</span>
+                  <span id="fireplaceMascotName">โคดี้ (Cody)</span>
+                </span>
+                <span class="text-[9px] bg-blue-500/30 text-blue-200 px-2 py-0.5 rounded-full font-mono">Google Grounded</span>
+              </div>
+              <p class="leading-relaxed">
+                "ยินดีต้อนรับสู่พื้นที่พักใจข้างเตาผิงครับ! น้อนมีเทคโนโลยี Google Search Grounding ดึงข่าวดาราล่าสุด สภาพอากาศจริง หรือเปิดไพ่ดูดวงให้คุณได้สดๆ เลยนะ นั่งจิบชาแล้วคุยกันได้เลยครับ 🔥☕"
+              </p>
+            </div>
+          </div>
+
+          <!-- Input Form -->
+          <form onsubmit="handleFireplaceChatSubmit(event)" class="flex gap-2 pt-1">
+            <input 
+              type="text" 
+              id="fireplaceChatInput" 
+              placeholder="พิมพ์คุยกับน้อง AI ได้ทุกเรื่องข้างเตาผิง..." 
+              class="flex-1 px-3.5 py-2.5 bg-black/50 border border-orange-500/30 rounded-xl text-xs text-white placeholder-amber-200/50 outline-none focus:border-amber-300"
+            />
+            <button 
+              type="submit" 
+              id="btnSendFireplaceChat"
+              class="px-4 py-2.5 bg-amber-300 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow-md transition shrink-0 flex items-center gap-1"
+            >
+              <span>ส่งคุย</span> <span>🔥</span>
+            </button>
+          </form>
+
+        </div>
+      </div>
+
+      <!-- VIEW 3: OPEN STUDY HUB -->
+      <div id="viewStudyhub" class="hidden space-y-4 sm:space-y-6 max-w-4xl mx-auto">
+        <div class="p-4 sm:p-6 rounded-3xl cozy-card border border-white/10 shadow-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+          <div>
+            <h2 class="text-sm sm:text-lg font-bold" data-i18n="openStudyHubHeader">🌍 Open Study Hub (คลังความรู้สาธารณะเพื่อความเท่าเทียม)</h2>
+            <p class="text-[10px] sm:text-xs opacity-75 mt-0.5" data-i18n="openStudyHubSub">แหล่งรวมสรุปเปเปอร์วิจัยและบทความศึกษาฟรี เพื่อลดความเหลื่อมล้ำทางการศึกษาของไทย</p>
+          </div>
+          <button onclick="openPublishModal()" class="w-full sm:w-auto px-3.5 py-2 rounded-2xl bg-amber-300 text-slate-950 font-bold text-xs shrink-0" data-i18n="shareKnowledgeBtn">+ แบ่งปันสรุปความรู้</button>
+        </div>
+        <div id="studyHubFeed" class="space-y-3 sm:space-y-4"></div>
+      </div>
+
+      <!-- VIEW 4: BURNOUT NETWORK -->
+      <div id="viewBurnout" class="hidden space-y-4 sm:space-y-6 max-w-4xl mx-auto">
+        <div class="p-4 sm:p-6 rounded-3xl cozy-card border border-white/10 shadow-lg space-y-3 sm:space-y-4">
+          <h2 class="text-sm sm:text-lg font-bold flex items-center gap-2">
+            ❤️ <span data-i18n="burnoutHeader">เครือข่ายสุขภาวะและป้องกันภาวะหมดไฟแห่งชาติ (National Burnout Shield)</span>
+          </h2>
+          <p class="text-[11px] sm:text-xs opacity-80 leading-relaxed" data-i18n="burnoutDesc">
+            เชื่อมโยงพลังใจของคนไทยทั้งประเทศ มาร่วมสร้างสถิติการทำงานอย่างมีความสุข พร้อมระบบแจ้งเตือนพักสายตาและยืดกล้ามเนื้อพร้อมกันทั่วประเทศ
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 pt-1 sm:pt-2">
+            <div class="p-3.5 sm:p-4 rounded-2xl bg-black/25 border border-white/10 text-center">
+              <span class="text-xl sm:text-2xl font-black text-amber-300">1,420 ชม.</span>
+              <span class="block text-[9px] sm:text-[10px] opacity-75 mt-0.5" data-i18n="statNational">เวลารวมที่คนไทยโฟกัสวันนี้</span>
+            </div>
+            <div class="p-3.5 sm:p-4 rounded-2xl bg-black/25 border border-white/10 text-center">
+              <span class="text-xl sm:text-2xl font-black text-emerald-300">850 คน</span>
+              <span class="block text-[9px] sm:text-[10px] opacity-75 mt-0.5" data-i18n="statBurnout">พ้นจากภาวะเครียดสะสม</span>
+            </div>
+            <div class="p-3.5 sm:p-4 rounded-2xl bg-black/25 border border-white/10 text-center">
+              <span class="text-xl sm:text-2xl font-black text-sky-300">12,500 🪙</span>
+              <span class="block text-[9px] sm:text-[10px] opacity-75 mt-0.5" data-i18n="statCoins">เหรียญความสุขที่แจกจ่าย</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- MOBILE NAVIGATION BOTTOM BAR -->
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 h-16 border-t border-white/10 bg-black/90 backdrop-blur-md flex justify-around items-center z-40 text-xs px-2">
+    <button onclick="switchTab('workspace')" id="mobileTabWorkspace" class="flex flex-col items-center justify-center text-amber-300 py-1 px-2.5 rounded-xl">
+      <i data-lucide="shield" class="w-5 h-5"></i>
+      <span class="text-[9px] mt-0.5 font-bold" data-i18n="mobVault">นิรภัย</span>
+    </button>
+    <button onclick="switchTab('fireplace')" id="mobileTabFireplace" class="flex flex-col items-center justify-center opacity-70 py-1 px-2.5 rounded-xl">
+      <i data-lucide="flame" class="w-5 h-5 text-orange-400"></i>
+      <span class="text-[9px] mt-0.5 font-semibold" data-i18n="mobFireplace">พักใจ</span>
+    </button>
+    <button onclick="switchTab('studyhub')" id="mobileTabStudyhub" class="flex flex-col items-center justify-center opacity-70 py-1 px-2.5 rounded-xl">
+      <i data-lucide="book-open" class="w-5 h-5"></i>
+      <span class="text-[9px] mt-0.5 font-semibold" data-i18n="mobStudy">คลังความรู้</span>
+    </button>
+    <button onclick="switchTab('burnout')" id="mobileTabBurnout" class="flex flex-col items-center justify-center opacity-70 py-1 px-2.5 rounded-xl">
+      <i data-lucide="heart-pulse" class="w-5 h-5"></i>
+      <span class="text-[9px] mt-0.5 font-semibold" data-i18n="mobBurnout">สุขภาวะ</span>
+    </button>
+  </nav>
+
+  <!-- GEMINI API KEY SETUP MODAL -->
+  <div id="apiKeyModal" class="fixed inset-0 bg-black/75 backdrop-blur-md z-50 hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-slate-900 border border-blue-400/50 text-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <h3 class="font-bold text-xs sm:text-sm text-blue-300 flex items-center gap-1.5">
+          <span>🔑 ตั้งค่า Google Gemini API Key</span>
+        </h3>
+        <button onclick="closeApiKeyModal()" class="w-6 h-6 rounded-full bg-slate-800 text-slate-400 text-xs">✕</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div class="p-3 bg-blue-500/10 border border-blue-500/20 rounded-2xl text-blue-200 leading-relaxed space-y-2">
+          <p class="font-bold text-amber-300">💡 ขั้นตอนการขอ API Key ฟรีจาก Google (ทำครั้งเดียวจบ):</p>
+          <ol class="list-decimal list-inside space-y-1 text-[11px]">
+            <li>กดลิงก์นี้เปิด <a href="https://aistudio.google.com/app/apikey" target="_blank" class="underline font-bold text-amber-300">Google AI Studio</a></li>
+            <li>กดปุ่ม <span class="font-bold bg-blue-600 px-1.5 py-0.5 rounded text-white text-[10px]">Create API key</span></li>
+            <li>ก๊อปปี้รหัส API Key (ขึ้นต้นด้วย <code class="bg-black/50 px-1 text-amber-300">AIzaSy...</code>) มาวางช่องด้านล่างนี้ได้เลยครับ!</li>
+          </ol>
+        </div>
+
+        <div>
+          <label class="text-[11px] text-slate-300 font-bold block mb-1">วาง Google Gemini API Key ของคุณ:</label>
+          <input 
+            type="password" 
+            id="inputGeminiApiKey" 
+            placeholder="AIzaSy..." 
+            class="w-full px-3 py-2.5 bg-black/60 border border-slate-700 rounded-xl font-mono text-xs text-amber-300 outline-none focus:border-blue-400"
+          />
+        </div>
+      </div>
+
+      <div class="flex gap-2">
+        <button onclick="saveGeminiApiKey()" class="flex-1 py-2.5 bg-blue-500 hover:bg-blue-600 text-white font-extrabold text-xs rounded-xl shadow-md transition">
+          บันทึก API Key
+        </button>
+        <button onclick="closeApiKeyModal()" class="px-4 py-2.5 bg-slate-800 text-slate-300 font-bold text-xs rounded-xl border border-slate-700">
+          ยกเลิก
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RENAME MASCOT AI MODAL -->
+  <div id="renameMascotModal" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-slate-900 border border-amber-300/50 text-white rounded-3xl max-w-sm w-full p-5 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+        <h3 class="font-bold text-xs sm:text-sm text-amber-300">✏️ ตั้งชื่อน้อง AI ผู้ช่วยของคุณ</h3>
+        <button onclick="closeRenameMascotModal()" class="w-6 h-6 rounded-full bg-slate-800 text-slate-400 text-xs">✕</button>
+      </div>
+      <div class="space-y-2">
+        <label class="text-xs text-slate-300 block">พิมพ์ชื่อ AI ใหม่ที่คุณชอบ:</label>
+        <input type="text" id="inputCustomMascotName" value="โคดี้ (Cody)" class="w-full px-3 py-2 bg-black/40 border border-slate-700 rounded-xl text-xs font-bold text-amber-300 outline-none focus:border-amber-300" />
+      </div>
+      <button onclick="saveCustomMascotName()" class="w-full py-2.5 rounded-xl bg-amber-300 text-slate-950 font-bold text-xs shadow-md">บันทึกชื่อน้อง AI</button>
+    </div>
+  </div>
+
+  <!-- AUTHENTICATION & USER PROFILE MODAL (GOOGLE LOGIN) -->
+  <div id="authModal" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 hidden flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-700 text-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4 my-auto">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <h3 id="lblAuthModalHeader" class="font-bold text-xs sm:text-sm text-amber-300 flex items-center gap-2">
+          <span>👤 บัญชีผู้ใช้งาน Google / CozyDesk ID</span>
+        </h3>
+        <button onclick="closeAuthModal()" class="w-7 h-7 rounded-full bg-slate-800 text-slate-400 text-xs">✕</button>
+      </div>
+
+      <!-- LOGGED OUT VIEW -->
+      <div id="authLoggedOutView" class="space-y-4 text-left text-xs">
+        <div class="text-center space-y-1">
+          <span class="text-3xl block">🌐</span>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            ลงชื่อเข้าใช้ด้วยบัญชี Google (Gmail) เพื่อผูกโปรไฟล์ผู้ใช้และสะสมเหรียญความสุข
+          </p>
+        </div>
+
+        <!-- Google Sign-In Primary Button -->
+        <button 
+          onclick="loginWithGoogle()" 
+          class="w-full py-3 bg-white hover:bg-slate-100 text-slate-900 rounded-2xl font-extrabold text-xs flex items-center justify-center gap-2.5 shadow-lg border border-slate-200 transition active:scale-95"
+        >
+          <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+          <span>เข้าสู่ระบบด้วย Google Account (Gmail จริง)</span>
+        </button>
+
+        <!-- Apple Sign-In -->
+        <button 
+          onclick="loginWithApple()" 
+          class="w-full py-3 bg-black hover:bg-slate-800 text-white rounded-2xl font-bold text-xs flex items-center justify-center gap-2.5 shadow-lg border border-slate-800 transition active:scale-95"
+        >
+          <svg class="w-4 h-4 fill-current" viewBox="0 0 170 170"><path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.82.13-9.68-1.95-14.58-6.23-3.23-2.76-7.14-7.46-11.73-14.11-6.6-9.59-11.83-20.3-15.7-32.12-3.87-11.82-5.8-23.01-5.8-33.57 0-14.43 3.65-26.04 10.95-34.82 7.3-8.78 16.27-13.29 26.91-13.53 4.82 0 10.02 1.25 15.6 3.75 5.58 2.5 9.4 3.78 11.45 3.84 1.83 0 5.86-1.34 12.08-4.02 6.22-2.68 11.53-3.9 15.93-3.66 11.51.61 20.72 4.93 27.63 12.97-24.28 14.72-23.4 37.64 2.62 50.41-5.25 12.82-12.35 25.59-21.3 38.31zM119.22 31.81c0-7.07 2.53-13.8 7.59-20.19 5.06-6.39 11.43-10.42 19.11-12.09.52 7.18-1.74 14.1-6.78 20.76-5.04 6.66-11.5 10.84-19.38 12.54-.25-.34-.54-1.02-.54-1.02z"/></svg>
+          <span>Sign in with Apple ID</span>
+        </button>
+
+        <div class="relative flex py-1 items-center">
+          <div class="flex-grow border-t border-slate-800"></div>
+          <span class="flex-shrink mx-3 text-[10px] text-slate-500 font-bold uppercase">หรือผูกอีเมล Gmail ส่วนตัว</span>
+          <div class="flex-grow border-t border-slate-800"></div>
+        </div>
+
+        <!-- Real Email Binding Form -->
+        <form onsubmit="handleEmailAuthAction(event)" class="space-y-3">
+          <div>
+            <label class="text-[10px] text-slate-400 font-bold block mb-1">อีเมลของคุณ (@gmail.com):</label>
+            <input 
+              type="email" 
+              id="authEmailInput" 
+              placeholder="name@gmail.com" 
+              required 
+              class="w-full px-3 py-2 bg-black/40 border border-slate-700 rounded-xl text-xs font-bold text-white focus:border-amber-300 outline-none" 
+            />
+          </div>
+          <div>
+            <label class="text-[10px] text-slate-400 font-bold block mb-1">รหัสผ่าน:</label>
+            <input 
+              type="password" 
+              id="authPasswordInput" 
+              placeholder="••••••••" 
+              required 
+              class="w-full px-3 py-2 bg-black/40 border border-slate-700 rounded-xl text-xs font-bold text-white focus:border-amber-300 outline-none" 
+            />
+          </div>
+          <div class="flex gap-2">
+            <button type="submit" onclick="setAuthMode('login')" class="flex-1 py-2.5 bg-amber-300 text-slate-950 font-extrabold text-xs rounded-xl shadow-md transition active:scale-95">
+              เข้าสู่ระบบ / ผูกอีเมล
+            </button>
+            <button type="submit" onclick="setAuthMode('register')" class="py-2.5 px-3 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl border border-white/10 transition">
+              สมัครสมาชิก
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- LOGGED IN VIEW -->
+      <div id="authLoggedInView" class="hidden space-y-4">
+        <div class="flex flex-col items-center gap-2.5 p-3.5 rounded-2xl bg-slate-800/80 border border-slate-700">
+          <div class="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-amber-300 text-slate-950 text-2xl sm:text-3xl font-black flex items-center justify-center overflow-hidden border-2 border-amber-300/50">
+            <span id="modalAvatarText">U</span>
+            <img id="modalAvatarImg" class="w-full h-full object-cover hidden" alt="Profile" />
+            <label class="absolute inset-0 bg-black/60 text-white text-[9px] sm:text-[10px] flex flex-col items-center justify-center opacity-0 hover:opacity-100 transition cursor-pointer font-bold">
+              <span data-i18n="profileChangeImg">📷 เปลี่ยนรูป</span>
+              <input type="file" accept="image/*" class="hidden" onchange="uploadUserProfileAvatar(event)" />
+            </label>
+          </div>
+
+          <div class="w-full space-y-2 text-left">
+            <div>
+              <div class="flex items-center justify-between">
+                <label class="text-[10px] text-slate-400 block" data-i18n="profileNameLabel">ชื่อผู้ใช้งาน:</label>
+                <span id="badgeAuthMethod" class="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-md font-extrabold">🌐 Google Connected</span>
+              </div>
+              <input type="text" id="inputProfileName" value="คุณผู้ใช้งาน" onchange="updateProfileInfo()" class="w-full px-3 py-1.5 bg-black/30 border border-slate-700 rounded-xl text-xs font-bold text-white" />
+            </div>
+
+            <div>
+              <label class="text-[10px] text-slate-400 block mb-1">อีเมลจริงที่ผูกไว้:</label>
+              <input type="email" id="inputProfileEmail" placeholder="your_email@gmail.com" class="w-full px-3 py-1.5 bg-black/50 border border-slate-700 rounded-xl text-xs font-mono text-amber-300 outline-none" readonly />
+            </div>
+
+            <div>
+              <label class="text-[10px] text-slate-400 block">Bio บอกตัวตน:</label>
+              <input type="text" id="inputProfileBio" value="นักศึกษาปี 3 | Focus & Google AI Study 🎧" onchange="updateProfileInfo()" class="w-full px-3 py-1.5 bg-black/30 border border-slate-700 rounded-xl text-xs text-slate-200" />
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 text-center text-xs">
+          <div class="p-2.5 rounded-2xl bg-slate-800/60 border"><span class="block text-slate-400 text-[9px]" data-i18n="coins">เหรียญ</span><span class="font-extrabold text-amber-300 text-xs sm:text-sm" id="profileCoinVal">180 🪙</span></div>
+          <div class="p-2.5 rounded-2xl bg-slate-800/60 border"><span class="block text-slate-400 text-[9px]" data-i18n="level">เลเวล</span><span class="font-extrabold text-amber-300 text-xs sm:text-sm" id="profileLevelVal">LV 1 🐾</span></div>
+          <div class="p-2.5 rounded-2xl bg-slate-800/60 border"><span class="block text-slate-400 text-[9px]" data-i18n="docsSummarized">ย่อยไฟล์</span><span class="font-extrabold text-amber-300 text-xs sm:text-sm" id="profileDocsVal">4 รายการ</span></div>
+        </div>
+
+        <div class="flex gap-2">
+          <button onclick="logoutUser()" class="flex-1 py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-300/40 font-bold text-xs transition">
+            🚪 ออกจากระบบ (Log Out)
+          </button>
+          <button onclick="deleteAccount()" class="py-2.5 px-3 rounded-2xl bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-800 font-bold text-xs transition">
+            🗑️ ลบบัญชี
+          </button>
+        </div>
+      </div>
+
+      <button onclick="closeAuthModal()" class="w-full py-2.5 rounded-2xl bg-amber-300 text-slate-950 font-bold text-xs" data-i18n="closeBtn">ปิดหน้าต่าง</button>
+    </div>
+  </div>
+
+  <!-- SHOP MODAL -->
+  <div id="shopModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-700 text-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-4 my-auto">
+      <div class="flex items-center justify-between">
+        <h3 class="font-extrabold text-xs sm:text-sm flex items-center gap-1.5" data-i18n="shopTitle">🪙 ร้านค้าของตกแต่งโต๊ะทำงาน (10+ รายการ)</h3>
+        <button onclick="closeShopModal()" class="w-7 h-7 rounded-full bg-slate-800 text-slate-400 text-xs">✕</button>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-60 sm:max-h-72 overflow-y-auto no-scrollbar p-1" id="shopItemsGrid"></div>
+      <button onclick="closeShopModal()" class="w-full py-2.5 sm:py-3 rounded-2xl bg-amber-300 text-slate-950 font-bold text-xs" data-i18n="closeBtn">ปิดหน้าต่าง</button>
+    </div>
+  </div>
+
+  <!-- THEME & CUSTOM WALLPAPER MODAL -->
+  <div id="themeModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-700 text-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4 my-auto">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+        <h3 class="font-bold text-xs sm:text-sm" data-i18n="themeModalTitle">🎨 เลือกธีม & วอลเปเปอร์พื้นหลัง</h3>
+        <button onclick="closeThemeModal()" class="w-7 h-7 rounded-full bg-slate-800 text-slate-400 text-xs">✕</button>
+      </div>
+      
+      <div class="grid grid-cols-2 gap-2 text-xs font-bold">
+        <button onclick="applyPresetTheme('theme-moonlit', '🌙 Moonlit', '🧶🐱', 'cat')" class="p-2.5 sm:p-3 rounded-2xl bg-slate-950 text-amber-300 border text-left flex items-center justify-between"><span>🌙 Midnight</span><span>🧶🐱</span></button>
+        <button onclick="applyPresetTheme('theme-daylight', '☀️ Daylight', '🐶🌿', 'dog')" class="p-2.5 sm:p-3 rounded-2xl bg-sky-100 text-slate-900 border text-left flex items-center justify-between"><span>☀️ Daylight</span><span>🐶🌿</span></button>
+        <button onclick="applyPresetTheme('theme-milktea', '🧋 Milk Tea', '🧋🦫', 'capybara')" class="p-2.5 sm:p-3 rounded-2xl bg-amber-100 text-amber-950 border text-left flex items-center justify-between"><span>🧋 Milk Tea</span><span>🧋🦫</span></button>
+        <button onclick="applyPresetTheme('theme-pastel', '🧶 Pastel', '🐰🌸', 'bunny')" class="p-2.5 sm:p-3 rounded-2xl bg-purple-100 text-purple-950 border text-left flex items-center justify-between"><span>🧶 Pastel</span><span>🐰🌸</span></button>
+        <button onclick="applyPresetTheme('theme-sunset', '🌅 Sunset', '🦀🌊', 'crab')" class="p-2.5 sm:p-3 rounded-2xl bg-orange-100 text-orange-950 border text-left col-span-2 flex items-center justify-between"><span>🌅 Sunset Beach</span><span>🦀🌊</span></button>
+      </div>
+
+      <div class="space-y-2 border-t border-slate-800 pt-3 text-xs">
+        <label class="text-[11px] text-amber-300 font-bold block">🖼️ อัปโหลดภาพวอลเปเปอร์จากอัลบั้มรูปภาพ:</label>
+        <input type="file" accept="image/*" onchange="uploadCustomWallpaper(event)" class="w-full text-xs text-slate-300 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:bg-amber-300 file:text-slate-950 font-bold cursor-pointer" />
+      </div>
+
+      <div class="space-y-1.5 border-t border-slate-800 pt-2.5">
+        <label class="text-[10px] sm:text-[11px] text-slate-400 font-bold uppercase">🎨 DIY เลือกสีพื้นหลังด้วยตนเอง</label>
+        <div class="flex items-center gap-2.5 bg-slate-800/80 p-2.5 rounded-2xl">
+          <span class="text-xs">สีพื้นหลัง:</span>
+          <input type="color" id="diyBgPicker" value="#0B132B" onchange="applyDiyBgColor(this.value)" class="w-8 h-7 rounded border-0 cursor-pointer">
+        </div>
+      </div>
+
+      <button onclick="closeThemeModal()" class="w-full py-2.5 sm:py-3 rounded-2xl bg-amber-300 text-slate-950 font-bold text-xs" data-i18n="closeBtn">ปิดหน้าต่าง</button>
+    </div>
+  </div>
+
+  <!-- PUBLISH STUDY HUB MODAL -->
+  <div id="publishModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-700 text-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-3.5 my-auto">
+      <h3 class="font-bold text-xs sm:text-sm text-amber-300" data-i18n="shareKnowledgeBtn">🌍 แบ่งปันสรุปความรู้สู่ Open Study Hub</h3>
+      <div class="space-y-2.5 text-xs">
+        <input type="text" id="pubTitle" placeholder="หัวข้อสรุปความรู้..." class="w-full px-3 py-2 bg-black/40 border border-slate-700 rounded-xl text-white" />
+        <textarea id="pubContent" rows="3" placeholder="เนื้อหาสรุปย่อ..." class="w-full px-3 py-2 bg-black/40 border border-slate-700 rounded-xl text-white"></textarea>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="submitPublishStudy()" class="flex-1 py-2 rounded-xl bg-amber-300 text-slate-950 font-bold text-xs" data-i18n="btnPublish">เผยแพร่สาธารณะ</button>
+        <button onclick="closePublishModal()" class="px-3.5 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs" data-i18n="btnCancel">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEME BREAK POPUP -->
+  <div id="memePopup" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border-2 border-amber-300 text-white rounded-3xl max-w-sm w-full p-5 sm:p-6 shadow-2xl text-center space-y-3.5">
+      <div id="memeIcon" class="text-4xl sm:text-5xl block animate-bounce">🧶🐱</div>
+      <h3 class="font-extrabold text-base sm:text-lg text-amber-300" id="lblMemeTitle">พักสายตากับสัตว์เลี้ยงประจำธีม!</h3>
+      <p class="text-xs opacity-90 leading-relaxed" id="lblMemeDesc">"ลุกขึ้นยืดกล้ามเนื้อและผ่อนคลายสายตา 20 วินาที เพื่อสุขภาพที่ดีน้า"</p>
+      <button onclick="dismissMemePopup()" class="w-full py-3 rounded-2xl bg-amber-300 text-slate-950 font-extrabold text-xs">รับทราบ! ลุกไปยืดเส้นยืดสายแล้วครับ 🐾</button>
+    </div>
+  </div>
+
+  <!-- APP STATE & LOGIC -->
+  <script>
+    // Empty key string provided at runtime
+    const apiKey = "";
+
+    function getEffectiveApiKey() {
+      return apiKey || localStorage.getItem('cozydesk_gemini_key') || '';
+    }
+
+    const i18nData = {
+      th: {
+        navSubtitle: "Powered by Google AI & Gemini Ecosystem",
+        btnShop: "ร้านค้าของแต่ง",
+        vaultTabTitle: "1. Google Gemini Vault",
+        fireplaceTabTitle: "2. พักใจข้างเตาผิง",
+        studyTabTitle: "3. Open Study Hub",
+        burnoutTabTitle: "4. Burnout & Focus Net",
+        lblAudioHeader: "🎧 Lofi Ambient Sound",
+        btnPlayMusic: "▶️ เล่นเพลงสมาธิ Lofi",
+        btnBreakMeme: "🤪 พักสายตา",
+        roomDecorTitle: "🛋️ ชั้นวางของตกแต่งโต๊ะทำงาน",
+        focusTimerTitle: "⏳ กำหนดเวลาโฟกัส (Focus Timer)",
+        lblMinutes: "นาที:",
+        btnSet: "ตั้ง",
+        btnStart: "เริ่มโฟกัส",
+        btnReset: "รีเซ็ต",
+        openStudyHubHeader: "🌍 Open Study Hub (คลังความรู้สาธารณะเพื่อความเท่าเทียม)",
+        openStudyHubSub: "แหล่งรวมสรุปเปเปอร์วิจัยและบทความศึกษาฟรี เพื่อลดความเหลื่อมล้ำทางการศึกษาของไทย",
+        shareKnowledgeBtn: "+ แบ่งปันสรุปความรู้",
+        burnoutHeader: "เครือข่ายสุขภาวะและป้องกันภาวะหมดไฟแห่งชาติ (National Burnout Shield)",
+        burnoutDesc: "เชื่อมโยงพลังใจของคนไทยทั้งประเทศ มาร่วมสร้างสถิติการทำงานอย่างมีความสุข พร้อมระบบแจ้งเตือนพักสายตาและยืดกล้ามเนื้อพร้อมกันทั่วประเทศ",
+        statNational: "เวลารวมที่คนไทยโฟกัสวันนี้",
+        statBurnout: "พ้นจากภาวะเครียดสะสม",
+        statCoins: "เหรียญความสุขที่แจกจ่าย",
+        mobVault: "นิรภัย",
+        mobFireplace: "พักใจ",
+        mobStudy: "คลังความรู้",
+        mobBurnout: "สุขภาวะ",
+        shopTitle: "🪙 ร้านค้าของตกแต่งโต๊ะทำงาน (10+ รายการ)",
+        closeBtn: "ปิดหน้าต่าง",
+        themeModalTitle: "🎨 เลือกธีม & วอลเปเปอร์พื้นหลัง",
+        profileTitle: "👤 โปรไฟล์ผู้ใช้งานส่วนบุคคล (CozyDesk ID)",
+        profileChangeImg: "📷 เปลี่ยนรูป",
+        profileNameLabel: "ชื่อผู้ใช้งาน:",
+        coins: "เหรียญ",
+        level: "เลเวล",
+        docsSummarized: "ย่อยไฟล์",
+        btnPublish: "เผยแพร่สาธารณะ",
+        btnCancel: "ยกเลิก"
+      },
+      en: {
+        navSubtitle: "Powered by Google AI & Gemini Ecosystem",
+        btnShop: "Deco Shop",
+        vaultTabTitle: "1. Google Gemini Vault",
+        fireplaceTabTitle: "2. Fireplace Chat",
+        studyTabTitle: "3. Open Study Hub",
+        burnoutTabTitle: "4. Burnout & Focus Net",
+        lblAudioHeader: "🎧 Lofi Ambient Sound",
+        btnPlayMusic: "▶️ Play Synth Lofi Track",
+        btnBreakMeme: "🤪 Eye Break",
+        roomDecorTitle: "🛋️ Desktop Decoration Shelf",
+        focusTimerTitle: "⏳ Custom Focus Study Timer",
+        lblMinutes: "Mins:",
+        btnSet: "Set",
+        btnStart: "Start Focus",
+        btnReset: "Reset",
+        openStudyHubHeader: "🌍 Open Study Hub (Public Educational Commons)",
+        openStudyHubSub: "Free research and study summaries to bridge educational inequality.",
+        shareKnowledgeBtn: "+ Share Knowledge Summary",
+        burnoutHeader: "National Burnout Shield & Health Network",
+        burnoutDesc: "Empowering group focus records and national office syndrome stretch reminders.",
+        statNational: "Total Focus Time Today",
+        statBurnout: "People Saved from Burnout",
+        statCoins: "Happiness Coins Distributed",
+        mobVault: "Vault",
+        mobFireplace: "Cozy Chat",
+        mobStudy: "Study Hub",
+        mobBurnout: "Wellbeing",
+        shopTitle: "🪙 Room Decoration Shop (10+ Items)",
+        closeBtn: "Close Modal",
+        themeModalTitle: "🎨 Choose Theme & Wallpaper",
+        profileTitle: "👤 User Profile Card (CozyDesk ID)",
+        profileChangeImg: "📷 Change Image",
+        profileNameLabel: "Display Name:",
+        coins: "Coins",
+        level: "Level",
+        docsSummarized: "Docs Parsed",
+        btnPublish: "Publish to Public",
+        btnCancel: "Cancel"
+      }
+    };
+
+    let activeLang = 'th';
+    let isTimerActive = false;
+    let focusCountDown = null;
+    let totalFocusSeconds = 1500;
+    window.coins = 180;
+    window.petExp = 30;
+    window.petLevel = 1;
+    let docsProcessedCount = 4;
+    let isPlayingAudio = false;
+
+    let mascotState = JSON.parse(localStorage.getItem('cozydesk_mascot')) || {
+      name: "โคดี้ (Cody)",
+      emoji: "🧶🐱",
+      type: "cat"
+    };
+
+    let currentUser = JSON.parse(localStorage.getItem('cozydesk_auth_user')) || null;
+    let authMode = 'login';
+    let activeFileData = null;
+    let activeSummaryText = "";
+
+    const shopItems = [
+      { id: 'laptop', emoji: '💻', name: 'โน้ตบุ๊กคู่ใจ', cost: 0 },
+      { id: 'notebook', emoji: '📚', name: 'สมุดบันทึก', cost: 0 },
+      { id: 'coffee', emoji: '☕', name: 'กาแฟร้อน', cost: 25 },
+      { id: 'matcha', emoji: '🍵', name: 'มัจฉะเย็น', cost: 30 },
+      { id: 'lamp', emoji: '💡', name: 'โคมไฟอุ่น', cost: 45 },
+      { id: 'cactus', emoji: '🌵', name: 'กระบองเพชร', cost: 35 },
+      { id: 'monstera', emoji: '🪴', name: 'มอนสเตอร่า', cost: 50 },
+      { id: 'record', emoji: '📻', name: 'วิทยุ Lofi', cost: 60 },
+      { id: 'gamepad', emoji: '🎮', name: 'จอยเกมพักผ่อน', cost: 65 },
+      { id: 'frame', emoji: '🖼️', name: 'กรอบรูปภาพ', cost: 40 }
+    ];
+
+    let ownedToys = [
+      { id: 'laptop', emoji: '💻', name: 'โน้ตบุ๊กคู่ใจ' },
+      { id: 'notebook', emoji: '📚', name: 'สมุดบันทึก' }
+    ];
+
+    window.studyHubPosts = [
+      { id: 1, title: "สรุปเปเปอร์วิจัย: AI with Privacy Preservation", author: "ดร. สมชาย", content: "งานวิจัยชี้ว่าการประมวลผลข้อมูลแบบ Local Client-Side ด้วย Google Gemini ช่วยลดความเสี่ยงข้อมูลรั่วไหลในระดับองค์กรและภาครัฐได้ 100%" },
+      { id: 2, title: "สรุปย่อกฎหมายคุ้มครองข้อมูลส่วนบุคคล (PDPA)", author: "น้องมายด์", content: "รวม 5 ข้อที่ประชาชนต้องรู้เกี่ยวกับสิทธิ์ในข้อมูลส่วนบุคคลและการยินยอมให้ประมวลผล" }
+    ];
+
+    // Exponential backoff API fetch helper
+    async function fetchWithRetry(url, options, maxRetries = 5) {
+      const delays = [1000, 2000, 4000, 8000, 16000];
+      for (let i = 0; i < maxRetries; i++) {
+        try {
+          const response = await fetch(url, options);
+          if (response.ok) return await response.json();
+          if (response.status === 429 || response.status >= 500) {
+            if (i < maxRetries - 1) {
+              await new Promise(res => setTimeout(res, delays[i]));
+              continue;
+            }
+          }
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error?.message || `เกิดข้อผิดพลาดในการประมวลผล (${response.status})`);
+        } catch (err) {
+          if (i === maxRetries - 1) throw err;
+          await new Promise(res => setTimeout(res, delays[i]));
+        }
+      }
+    }
+
+    // Call Google Gemini API (gemini-2.5-flash-preview-09-2025)
+    async function callGeminiApi(systemPrompt, contents, enableSearch = false) {
+      const activeKey = getEffectiveApiKey();
+      
+      if (!activeKey) {
+        openApiKeyModal();
+        throw new Error("ยังไม่ได้ใส่ Google Gemini API Key ครับ! กรุณากดปุ่ม 🔑 ด้านบนแล้วใส่ API Key ฟรีจาก Google AI Studio ก่อนนะครับ");
+      }
+
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${activeKey}`;
+      const payload = {
+        contents: contents,
+        systemInstruction: { parts: [{ text: systemPrompt }] }
+      };
+
+      if (enableSearch) {
+        payload.tools = [{ "google_search": {} }];
+      }
+
+      try {
+        const result = await fetchWithRetry(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        return result.candidates?.[0]?.content?.parts?.[0]?.text || "ไม่พบคำตอบจาก Google Gemini";
+      } catch (err) {
+        if (err.message && (err.message.includes('API Key') || err.message.includes('unregistered callers') || err.message.includes('400') || err.message.includes('403'))) {
+          openApiKeyModal();
+          throw new Error("Google Gemini API Key ไม่ถูกต้องหรือยังไม่ได้ตั้งค่า กรุณาตรวจสอบ API Key ในหน้าต่างที่เปิดขึ้นมาครับ");
+        }
+        throw err;
+      }
+    }
+
+    function openApiKeyModal() {
+      const modal = document.getElementById('apiKeyModal');
+      const savedKey = localStorage.getItem('cozydesk_gemini_key') || '';
+      document.getElementById('inputGeminiApiKey').value = savedKey;
+      modal.classList.remove('hidden');
+    }
+
+    function closeApiKeyModal() {
+      document.getElementById('apiKeyModal').classList.add('hidden');
+    }
+
+    function saveGeminiApiKey() {
+      const keyVal = document.getElementById('inputGeminiApiKey').value.trim();
+      if (!keyVal) {
+        showNotification("⚠️ กรุณากรอก API Key ด้วยครับ");
+        return;
+      }
+      localStorage.setItem('cozydesk_gemini_key', keyVal);
+      closeApiKeyModal();
+      updateApiKeyStatusUI();
+      showNotification("✨ บันทึก Google Gemini API Key เรียบร้อยแล้ว! พร้อมคุยและสรุปไฟล์แล้วครับ");
+    }
+
+    function updateApiKeyStatusUI() {
+      const btn = document.getElementById('btnApiKeyStatus');
+      const lbl = document.getElementById('lblApiKeyStatusText');
+      const key = getEffectiveApiKey();
+
+      if (key) {
+        btn.className = "px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[11px] sm:text-xs shadow-md transition flex items-center gap-1.5 border border-emerald-300/40";
+        if (lbl) lbl.innerText = "✨ Gemini Active";
+      } else {
+        btn.className = "px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-bold text-[11px] sm:text-xs shadow-md transition flex items-center gap-1.5 border border-blue-300/40 animate-pulse";
+        if (lbl) lbl.innerText = "🔑 ตั้งค่า API Key";
+      }
+    }
+
+    function renderAuthHeaderUI() {
+      const btnHeaderAuth = document.getElementById('btnHeaderAuth');
+      if (!btnHeaderAuth) return;
+
+      if (currentUser) {
+        const avatarImg = currentUser.avatarUrl 
+          ? `<img src="${currentUser.avatarUrl}" class="w-full h-full object-cover" />` 
+          : `<span class="text-[10px] font-extrabold text-blue-600">${(currentUser.name || 'G').charAt(0).toUpperCase()}</span>`;
+        
+        btnHeaderAuth.className = "flex items-center gap-1.5 pl-1 pr-2.5 py-1 sm:pl-1.5 sm:pr-3 sm:py-1.5 rounded-xl sm:rounded-2xl bg-white text-slate-900 border border-slate-300 shadow-sm transition";
+        btnHeaderAuth.innerHTML = `
+          <div class="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center overflow-hidden shrink-0 font-bold">
+            ${avatarImg}
+          </div>
+          <span class="text-xs font-bold truncate max-w-[90px] sm:max-w-[120px]">${currentUser.name}</span>
+          <span class="text-[9px] bg-blue-500 text-white px-1.5 py-0.2 rounded font-black">Google</span>
+        `;
+      } else {
+        btnHeaderAuth.className = "flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-2xl bg-white hover:bg-slate-100 text-slate-900 font-bold text-xs shadow-md border border-slate-300 transition";
+        btnHeaderAuth.innerHTML = `
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+          <span class="text-xs font-bold">Google Login</span>
+        `;
+      }
+    }
+
+    function openAuthModal() {
+      const modal = document.getElementById('authModal');
+      const loggedOutView = document.getElementById('authLoggedOutView');
+      const loggedInView = document.getElementById('authLoggedInView');
+      const headerTitle = document.getElementById('lblAuthModalHeader');
+
+      if (currentUser) {
+        headerTitle.innerText = "👤 บัญชีผู้ใช้งาน Google / CozyDesk ID";
+        loggedOutView.classList.add('hidden');
+        loggedInView.classList.remove('hidden');
+
+        document.getElementById('inputProfileName').value = currentUser.name;
+        if (document.getElementById('inputProfileEmail')) {
+          document.getElementById('inputProfileEmail').value = currentUser.email || '';
+        }
+
+        if (currentUser.avatarUrl) {
+          document.getElementById('modalAvatarImg').src = currentUser.avatarUrl;
+          document.getElementById('modalAvatarImg').classList.remove('hidden');
+          document.getElementById('modalAvatarText').classList.add('hidden');
+        } else {
+          document.getElementById('modalAvatarText').innerText = (currentUser.name || 'G').charAt(0).toUpperCase();
+          document.getElementById('modalAvatarText').classList.remove('hidden');
+          document.getElementById('modalAvatarImg').classList.add('hidden');
+        }
+      } else {
+        headerTitle.innerText = "🌐 เข้าสู่ระบบด้วย Google Account";
+        loggedOutView.classList.remove('hidden');
+        loggedInView.classList.add('hidden');
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeAuthModal() {
+      document.getElementById('authModal').classList.add('hidden');
+    }
+
+    function loginWithGoogle() {
+      const userEmail = prompt("กรุณากรอกอีเมล Gmail ของคุณเพื่อเข้าสู่ระบบด้วย Google Account:", "your_name@gmail.com");
+      if (userEmail && userEmail.includes('@')) {
+        const userName = userEmail.split('@')[0];
+        currentUser = {
+          name: userName,
+          email: userEmail,
+          avatarUrl: null
+        };
+        localStorage.setItem('cozydesk_auth_user', JSON.stringify(currentUser));
+        renderAuthHeaderUI();
+        closeAuthModal();
+        showNotification(`✅ เข้าสู่ระบบ Google สำเร็จ: ${userEmail}`);
+      }
+    }
+
+    function loginWithApple() {
+      const userEmail = prompt("กรุณากรอก Apple ID หรืออีเมลของคุณ:", "user@privaterelay.appleid.com");
+      if (userEmail && userEmail.includes('@')) {
+        const userName = userEmail.split('@')[0];
+        currentUser = {
+          name: userName,
+          email: userEmail,
+          avatarUrl: null
+        };
+        localStorage.setItem('cozydesk_auth_user', JSON.stringify(currentUser));
+        renderAuthHeaderUI();
+        closeAuthModal();
+        showNotification(`🍎 เข้าสู่ระบบ Apple ID สำเร็จ: ${userEmail}`);
+      }
+    }
+
+    function setAuthMode(mode) {
+      authMode = mode;
+    }
+
+    function handleEmailAuthAction(e) {
+      e.preventDefault();
+      const email = document.getElementById('authEmailInput').value.trim();
+      if (!email || !email.includes('@')) return;
+
+      const userName = email.split('@')[0];
+      currentUser = {
+        name: userName,
+        email: email,
+        avatarUrl: null
+      };
+      localStorage.setItem('cozydesk_auth_user', JSON.stringify(currentUser));
+      renderAuthHeaderUI();
+      closeAuthModal();
+      showNotification(`✉️ ผูกอีเมล ${email} เรียบร้อยแล้ว!`);
+    }
+
+    function logoutUser() {
+      currentUser = null;
+      localStorage.removeItem('cozydesk_auth_user');
+      renderAuthHeaderUI();
+      closeAuthModal();
+      showNotification("👋 ออกจากระบบเรียบร้อยแล้ว");
+    }
+
+    function deleteAccount() {
+      currentUser = null;
+      localStorage.removeItem('cozydesk_auth_user');
+      renderAuthHeaderUI();
+      closeAuthModal();
+      showNotification("🗑️ ลบบัญชีผู้ใช้เรียบร้อยแล้ว");
+    }
+
+    function updateProfileInfo() {
+      if (!currentUser) return;
+      currentUser.name = document.getElementById('inputProfileName').value;
+      localStorage.setItem('cozydesk_auth_user', JSON.stringify(currentUser));
+      renderAuthHeaderUI();
+      showNotification("💾 บันทึกโปรไฟล์เรียบร้อยแล้ว!");
+    }
+
+    function uploadUserProfileAvatar(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        if (!currentUser) {
+          currentUser = { name: "คุณผู้ใช้งาน", email: "user@gmail.com" };
+        }
+        currentUser.avatarUrl = e.target.result;
+        localStorage.setItem('cozydesk_auth_user', JSON.stringify(currentUser));
+        renderAuthHeaderUI();
+        openAuthModal();
+        showNotification("📸 เปลี่ยนรูปโปรไฟล์เรียบร้อยแล้ว!");
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function updateMascotUI() {
+      document.getElementById('lblMascotName').innerText = mascotState.name;
+      document.getElementById('lblChatPetName').innerText = mascotState.name;
+      document.getElementById('headerPetIcon').innerText = mascotState.emoji;
+      document.getElementById('petAvatar').innerText = mascotState.emoji;
+      document.getElementById('memeIcon').innerText = mascotState.emoji;
+      
+      document.getElementById('lblFireplacePetCompanion').innerText = `${mascotState.name} พร้อมคุยแล้ว`;
+      document.getElementById('fireplaceMascotEmoji').innerText = mascotState.emoji;
+      document.getElementById('fireplaceMascotName').innerText = mascotState.name;
+    }
+
+    function openRenameMascotModal() {
+      document.getElementById('inputCustomMascotName').value = mascotState.name;
+      document.getElementById('renameMascotModal').classList.remove('hidden');
+    }
+
+    function closeRenameMascotModal() {
+      document.getElementById('renameMascotModal').classList.add('hidden');
+    }
+
+    function saveCustomMascotName() {
+      const newName = document.getElementById('inputCustomMascotName').value.trim();
+      if (newName) {
+        mascotState.name = newName;
+        localStorage.setItem('cozydesk_mascot', JSON.stringify(mascotState));
+        updateMascotUI();
+        closeRenameMascotModal();
+        showNotification(`✏️ เปลี่ยนชื่อน้อง AI เป็น "${newName}" เรียบร้อยแล้ว!`);
+      }
+    }
+
+    function switchLanguage(lang) {
+      activeLang = lang;
+      document.getElementById('currentLangLabel').innerText = lang.toUpperCase();
+      const dict = i18nData[lang] || i18nData['en'];
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[key]) el.innerText = dict[key];
+      });
+      toggleLangDropdown(false);
+      showNotification(`🌐 Language: ${lang.toUpperCase()}`);
+    }
+
+    function toggleLangDropdown(forceState) {
+      const dropdown = document.getElementById('langDropdown');
+      if (forceState !== undefined) {
+        if (forceState) dropdown.classList.remove('hidden');
+        else dropdown.classList.add('hidden');
+      } else {
+        dropdown.classList.toggle('hidden');
+      }
+    }
+
+    function switchTab(viewId) {
+      document.getElementById('viewWorkspace').classList.add('hidden');
+      document.getElementById('viewFireplace').classList.add('hidden');
+      document.getElementById('viewStudyhub').classList.add('hidden');
+      document.getElementById('viewBurnout').classList.add('hidden');
+
+      ['sideTabWorkspace', 'sideTabFireplace', 'sideTabStudyhub', 'sideTabBurnout'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.className = "w-full flex items-center gap-3 px-4 py-3 rounded-2xl opacity-80 hover:opacity-100 hover:bg-white/10 font-medium text-sm transition text-left";
+      });
+
+      ['mobileTabWorkspace', 'mobileTabFireplace', 'mobileTabStudyhub', 'mobileTabBurnout'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.className = "flex flex-col items-center justify-center opacity-70 py-1 px-2.5 rounded-xl";
+      });
+
+      if (viewId === 'workspace') {
+        document.getElementById('viewWorkspace').classList.remove('hidden');
+        if (document.getElementById('sideTabWorkspace')) document.getElementById('sideTabWorkspace').className = "w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-amber-300 text-slate-950 font-bold text-sm shadow-sm transition text-left";
+        document.getElementById('mobileTabWorkspace').className = "flex flex-col items-center justify-center text-amber-300 opacity-100 py-1 px-2.5 rounded-xl";
+      } else if (viewId === 'fireplace') {
+        document.getElementById('viewFireplace').classList.remove('hidden');
+        if (document.getElementById('sideTabFireplace')) document.getElementById('sideTabFireplace').className = "w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-amber-300 text-slate-950 font-bold text-sm shadow-sm transition text-left";
+        document.getElementById('mobileTabFireplace').className = "flex flex-col items-center justify-center text-amber-300 opacity-100 py-1 px-2.5 rounded-xl";
+      } else if (viewId === 'studyhub') {
+        document.getElementById('viewStudyhub').classList.remove('hidden');
+        if (document.getElementById('sideTabStudyhub')) document.getElementById('sideTabStudyhub').className = "w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-amber-300 text-slate-950 font-bold text-sm shadow-sm transition text-left";
+        document.getElementById('mobileTabStudyhub').className = "flex flex-col items-center justify-center text-amber-300 opacity-100 py-1 px-2.5 rounded-xl";
+        renderStudyHubFeed();
+      } else if (viewId === 'burnout') {
+        document.getElementById('viewBurnout').classList.remove('hidden');
+        if (document.getElementById('sideTabBurnout')) document.getElementById('sideTabBurnout').className = "w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-amber-300 text-slate-950 font-bold text-sm shadow-sm transition text-left";
+        document.getElementById('mobileTabBurnout').className = "flex flex-col items-center justify-center text-amber-300 opacity-100 py-1 px-2.5 rounded-xl";
+      }
+    }
+
+    function applyPresetTheme(themeClass, badgeName, petEmoji, petType) {
+      const body = document.getElementById('appBody');
+      body.style.backgroundImage = 'none';
+      body.className = `${themeClass} h-full flex flex-col overflow-hidden select-none`;
+      document.getElementById('themeBadge').innerText = badgeName;
+      
+      mascotState.emoji = petEmoji;
+      mascotState.type = petType;
+      localStorage.setItem('cozydesk_mascot', JSON.stringify(mascotState));
+      updateMascotUI();
+
+      closeThemeModal();
+      showNotification(`✨ Theme: ${badgeName} (${petEmoji})`);
+    }
+
+    function uploadCustomWallpaper(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const body = document.getElementById('appBody');
+        body.className = "theme-custom-wallpaper h-full flex flex-col overflow-hidden select-none";
+        body.style.backgroundImage = `url('${evt.target.result}')`;
+        document.getElementById('themeBadge').innerText = '🖼️ Wallpaper';
+        closeThemeModal();
+        showNotification("🖼️ เปลี่ยนวอลเปเปอร์พื้นหลังเรียบร้อย!");
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function applyDiyBgColor(hexColor) {
+      const body = document.getElementById('appBody');
+      body.style.backgroundImage = 'none';
+      body.style.background = hexColor;
+      document.getElementById('themeBadge').innerText = '🎨 DIY';
+      closeThemeModal();
+      showNotification(`🎨 BG Color: ${hexColor}`);
+    }
+
+    function openThemeModal() { document.getElementById('themeModal').classList.remove('hidden'); }
+    function closeThemeModal() { document.getElementById('themeModal').classList.add('hidden'); }
+    function openShopModal() { renderShopItems(); document.getElementById('shopModal').classList.remove('hidden'); }
+    function closeShopModal() { document.getElementById('shopModal').classList.add('hidden'); }
+    function openPublishModal() { document.getElementById('publishModal').classList.remove('hidden'); }
+    function closePublishModal() { document.getElementById('publishModal').classList.add('hidden'); }
+
+    async function processFileWithRewards(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      document.getElementById('dropZone').classList.add('hidden');
+      document.getElementById('summarizerLoading').classList.remove('hidden');
+
+      const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+      const isImage = file.type.startsWith('image/');
+      const isPdf = ext === '.pdf' || file.type === 'application/pdf';
+
+      try {
+        let systemPrompt = `คุณคือ ${mascotState.name} ผู้ช่วย AI ใจดีสำหรับย่อยสรุปเอกสารและรูปภาพ ขับเคลื่อนด้วย Google Gemini 2.5 Flash
+หน้าที่ของคุณคืออ่านเอกสารหรือวิเคราะห์รูปภาพ แล้วสรุปประเด็นหลักสั้นกระชับ อ่านง่าย
+
+ข้อบังคับสำคัญที่สุด:
+1. ทุกการสรุปต้องลงท้ายด้วยหัวข้อ "📌 ส่วนอ้างอิงจากต้นฉบับ" เสมอ โดยระบุว่าข้อมูลมาจากส่วนใด
+2. ให้เตือนผู้ใช้ด้วยความหวังดีว่า "น้อนเป็น Google AI อาจมีข้อผิดพลาดได้ อย่าลืมทบทวนเอกสารต้นฉบับด้วยตนเองอีกครั้งนะครับ!"`;
+
+        let contents = [];
+
+        if (isImage) {
+          const reader = new FileReader();
+          reader.onload = async function(e) {
+            const base64 = e.target.result.split(',')[1];
+            activeFileData = { type: 'image', mimeType: file.type || 'image/png', base64: base64, name: file.name };
+            contents = [{
+              parts: [
+                { inlineData: { mimeType: activeFileData.mimeType, data: activeFileData.base64 } },
+                { text: "โปรดวิเคราะห์รูปภาพนี้แล้วสรุปเนื้อหาสำคัญ" }
+              ]
+            }];
+            await runSummarizeApi(systemPrompt, contents, file.name);
+          };
+          reader.readAsDataURL(file);
+        } else if (isPdf) {
+          const reader = new FileReader();
+          reader.onload = async function(e) {
+            const pdfText = await extractPdfText(e.target.result);
+            activeFileData = { type: 'text', text: pdfText, name: file.name };
+            contents = [{ parts: [{ text: `โปรดสรุปเนื้อหา PDF ต่อไปนี้:\n\n${pdfText}` }] }];
+            await runSummarizeApi(systemPrompt, contents, file.name);
+          };
+          reader.readAsArrayBuffer(file);
+        } else {
+          const reader = new FileReader();
+          reader.onload = async function(e) {
+            const textContent = e.target.result;
+            activeFileData = { type: 'text', text: textContent, name: file.name };
+            contents = [{ parts: [{ text: `โปรดสรุปเนื้อหาต่อไปนี้:\n\n${textContent}` }] }];
+            await runSummarizeApi(systemPrompt, contents, file.name);
+          };
+          reader.readAsText(file);
+        }
+      } catch (err) {
+        document.getElementById('summarizerLoading').classList.add('hidden');
+        document.getElementById('dropZone').classList.remove('hidden');
+        showNotification("เกิดข้อผิดพลาดในการประมวลผลไฟล์: " + err.message);
+      }
+    }
+
+    async function extractPdfText(arrayBuffer) {
+      if (!window.pdfjsLib) return "ไม่พบ PDF.js library";
+      const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+      const pdf = await loadingTask.promise;
+      let fullText = '';
+      for (let i = 1; i <= Math.min(pdf.numPages, 10); i++) {
+        const page = await pdf.getPage(i);
+        const tokenized = await page.getTextContent();
+        const pageText = tokenized.items.map(item => item.str).join(' ');
+        fullText += `--- Page ${i} ---\n${pageText}\n\n`;
+      }
+      return fullText;
+    }
+
+    async function runSummarizeApi(systemPrompt, contents, fileName) {
+      try {
+        const summaryText = await callGeminiApi(systemPrompt, contents);
+        activeSummaryText = summaryText;
+
+        document.getElementById('summarizerLoading').classList.add('hidden');
+        docsProcessedCount++;
+        window.coins += 25;
+        window.petExp += 35;
+        if (window.petExp >= 100) {
+          window.petLevel++;
+          window.petExp = window.petExp % 100;
+          showNotification(`🎉 ${mascotState.name} เลเวลอัป! LV ${window.petLevel}`);
+        }
+        updateStatsUI();
+
+        document.getElementById('summaryResultsContainer').innerHTML = `
+          <div class="p-4 sm:p-5 rounded-2xl bg-black/30 border border-blue-400/30 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-blue-300 flex items-center gap-1.5">
+                <span>⚡</span> <span>ผลสรุปโดย Google Gemini: ${fileName}</span>
+              </span>
+              <span class="text-[9px] bg-blue-500 text-white px-2 py-0.5 rounded-md font-extrabold">Gemini 2.5 Flash</span>
+            </div>
+            <p class="text-xs opacity-90 leading-relaxed whitespace-pre-wrap">${summaryText}</p>
+            <div class="flex items-center justify-between pt-1">
+              <button onclick="copyToClipboardText(activeSummaryText)" class="text-[10px] bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded-lg text-blue-200 font-bold transition">📋 คัดลอกสรุป</button>
+              <button onclick="this.closest('.border').remove(); document.getElementById('dropZone').classList.remove('hidden'); document.getElementById('chatContainer').classList.add('hidden');" class="text-[10px] text-amber-300 underline font-bold block">ลบการ์ดสรุป</button>
+            </div>
+          </div>
+        `;
+
+        document.getElementById('chatContainer').classList.remove('hidden');
+        const feed = document.getElementById('chatFeed');
+        feed.innerHTML = `
+          <div class="p-2.5 rounded-xl bg-blue-500/15 text-blue-100 border border-blue-400/20 leading-relaxed">
+            <strong>${mascotState.emoji} ${mascotState.name}:</strong> "ย่อยสรุปไฟล์ ${fileName} ด้วย Google Gemini เรียบร้อยแล้วครับ! มีสงสัยตรงไหนพิมพ์ถามเพิ่มได้เลยน้า แต่อย่าลืมช่วยเช็กและทบทวนเอกสารต้นฉบับด้วยน้าเพื่อความถูกต้องที่สุดครับ 🐾"
+          </div>
+        `;
+      } catch (err) {
+        document.getElementById('summarizerLoading').classList.add('hidden');
+        document.getElementById('dropZone').classList.remove('hidden');
+        showNotification("⚠️ " + err.message);
+      }
+    }
+
+    function copyToClipboardText(text) {
+      if (!text) return;
+      const el = document.createElement('textarea');
+      el.value = text;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      showNotification("📋 คัดลอกสรุปเนื้อหาลง Clipboard เรียบร้อยแล้ว!");
+    }
+
+    async function handleChatSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('chatInput');
+      const val = input.value.trim();
+      if (!val || !activeFileData) return;
+
+      const btn = document.getElementById('btnSendChat');
+      btn.disabled = true;
+
+      const feed = document.getElementById('chatFeed');
+      feed.innerHTML += `<div class="p-2 rounded-xl bg-slate-800 text-slate-100 text-right"><strong>คุณ:</strong> ${val}</div>`;
+      input.value = '';
+      feed.scrollTop = feed.scrollHeight;
+
+      try {
+        const systemPrompt = `คุณคือ ${mascotState.name} ผู้ช่วย AI สำหรับทบทวนเอกสาร ขับเคลื่อนโดย Google Gemini 2.5 Flash
+ตอบคำถามผู้ใช้โดยอ้างอิงจากเนื้อหาไฟล์หรือรูปภาพที่ผู้ใช้อัปโหลด
+ข้อบังคับสำคัญ:
+1. ตอบคำถามจากบริบทเนื้อหาไฟล์เท่านั้น
+2. คอยเตือนผู้ใช้อย่างน่ารักเสมอว่า "ข้อมูลนี้อ้างอิงจาก AI สรุปน้า อย่าลืมย้อนไปทบทวนในไฟล์ต้นฉบับด้วยครับ!"`;
+
+        let contents = [];
+        if (activeFileData.type === 'image') {
+          contents.push({
+            parts: [
+              { inlineData: { mimeType: activeFileData.mimeType, data: activeFileData.base64 } },
+              { text: `คำถามจากผู้ใช้เกี่ยวกับรูปภาพนี้: ${val}` }
+            ]
+          });
+        } else {
+          contents.push({
+            parts: [
+              { text: `บริบทไฟล์:\n${activeFileData.text}\n\nคำถามของผู้ใช้: ${val}` }
+            ]
+          });
+        }
+
+        const replyText = await callGeminiApi(systemPrompt, contents);
+        feed.innerHTML += `
+          <div class="p-2.5 rounded-xl bg-blue-500/15 text-blue-200 border border-blue-400/20 leading-relaxed">
+            <strong>${mascotState.emoji} ${mascotState.name}:</strong> ${replyText}
+          </div>
+        `;
+      } catch (err) {
+        feed.innerHTML += `<div class="p-2.5 rounded-xl bg-rose-950/60 text-rose-300 border border-rose-800">⚠️ ${err.message}</div>`;
+      } finally {
+        btn.disabled = false;
+        feed.scrollTop = feed.scrollHeight;
+      }
+    }
+
+    function sendFireplacePrompt(promptText) {
+      document.getElementById('fireplaceChatInput').value = promptText;
+      handleFireplaceChatSubmit(new Event('submit'));
+    }
+
+    async function handleFireplaceChatSubmit(e) {
+      if (e) e.preventDefault();
+      const input = document.getElementById('fireplaceChatInput');
+      const val = input.value.trim();
+      if (!val) return;
+
+      const btn = document.getElementById('btnSendFireplaceChat');
+      btn.disabled = true;
+
+      const feed = document.getElementById('fireplaceChatFeed');
+      feed.innerHTML += `
+        <div class="p-2.5 rounded-2xl bg-orange-500/20 text-orange-100 text-right font-medium border border-orange-500/30">
+          <strong>คุณ:</strong> ${val}
+        </div>
+      `;
+      input.value = '';
+      feed.scrollTop = feed.scrollHeight;
+
+      try {
+        const systemPrompt = `คุณคือ ${mascotState.name} เพื่อนสนิทอบอุ่นริมเตาผิง (Fireplace Companion) ประจำเว็บ CozyDesk AI
+ขุมพลังของคุณ: Google Gemini 2.5 Flash + Google Search Grounding
+
+บุคลิกของคุณ: เป็นมิตร อบอุ่น คุยสนุก ชอบฟังเรื่องราว และคุยได้ทุกเรื่องในโลก!
+
+ขอบเขตการคุย:
+- คุยได้ทั่วไปทุกเรื่อง ไม่ว่าจะเป็นข่าวดารา เรื่องบันเทิง สภาพอากาศ ดูดวง ไพ่ยิปซี เรื่องเรียน ความรัก หรือการให้กำลังใจฮีลใจ
+- ใช้ภาษาไทยแบบเป็นกันเอง อบอุ่น มีคำลงท้ายน่ารักๆ เช่น "ครับ", "น้า", "เพื่อน"
+- ใช้เทคโนโลยี Google Search ค้นหาข้อมูลสภาพอากาศ ข่าวดารา หรือข้อมูลปัจจุบันมาตอบผู้ใช้ได้เลย`;
+
+        const contents = [
+          { parts: [{ text: `ผู้ใช้ชวนคุยข้างเตาผิงว่า: "${val}"` }] }
+        ];
+
+        // Enable Google Search Grounding
+        const replyText = await callGeminiApi(systemPrompt, contents, true);
+
+        feed.innerHTML += `
+          <div class="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-200 leading-relaxed space-y-1">
+            <div class="font-bold text-amber-300 flex items-center justify-between">
+              <span class="flex items-center gap-1.5">
+                <span>${mascotState.emoji}</span>
+                <span>${mascotState.name}</span>
+              </span>
+              <span class="text-[8px] bg-blue-500/30 text-blue-200 px-2 py-0.5 rounded-full font-mono">Google Grounded</span>
+            </div>
+            <p class="whitespace-pre-wrap">${replyText}</p>
+          </div>
+        `;
+      } catch (err) {
+        feed.innerHTML += `
+          <div class="p-2.5 rounded-2xl bg-rose-950/60 text-rose-300 border border-rose-800">
+            ⚠️ ${err.message}
+          </div>
+        `;
+      } finally {
+        btn.disabled = false;
+        feed.scrollTop = feed.scrollHeight;
+      }
+    }
+
+    function handleCustomAudioUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const player = document.getElementById('localAudioPlayer');
+      player.src = URL.createObjectURL(file);
+      player.play();
+      isPlayingAudio = true;
+      document.getElementById('btnMusicPlay').innerText = '⏸️ หยุดเพลง';
+      document.getElementById('musicPulse').className = 'w-2 h-2 rounded-full bg-emerald-400 animate-ping';
+      showNotification(`🎧 เล่นเพลง: ${file.name}`);
+    }
+
+    function toggleBuiltInMusic() {
+      const player = document.getElementById('localAudioPlayer');
+      if (isPlayingAudio) {
+        player.pause();
+        isPlayingAudio = false;
+        document.getElementById('btnMusicPlay').innerText = '▶️ เล่นเพลงสมาธิ Lofi';
+        document.getElementById('musicPulse').className = 'w-2 h-2 rounded-full bg-slate-500';
+      } else {
+        showNotification("🎧 เริ่มเล่นเพลงสมาธิ Lofi Ambient");
+        isPlayingAudio = true;
+        document.getElementById('btnMusicPlay').innerText = '⏸️ หยุดเพลง Lofi';
+        document.getElementById('musicPulse').className = 'w-2 h-2 rounded-full bg-emerald-400 animate-ping';
+      }
+    }
+
+    function renderShopItems() {
+      const grid = document.getElementById('shopItemsGrid');
+      grid.innerHTML = '';
+      shopItems.forEach(item => {
+        const isOwned = ownedToys.some(t => t.id === item.id);
+        const btn = isOwned ? `<span class="text-[10px] text-slate-400 font-bold">มีแล้ว</span>` : `<button onclick="buyDecor('${item.id}', ${item.cost}, '${item.emoji}', '${item.name}')" class="bg-amber-300 text-slate-950 font-bold px-2 py-1 rounded-xl text-[10px]">ซื้อ (-${item.cost})</button>`;
+        grid.innerHTML += `<div class="p-2.5 bg-slate-800 rounded-2xl text-center space-y-1"><span class="text-xl sm:text-2xl">${item.emoji}</span><h4 class="font-bold text-[11px] sm:text-xs">${item.name}</h4>${btn}</div>`;
+      });
+    }
+
+    function buyDecor(id, cost, emoji, name) {
+      if (window.coins >= cost) {
+        window.coins -= cost;
+        ownedToys.push({ id, emoji, name });
+        updateStatsUI();
+        renderDesktopToys();
+        openShopModal();
+        showNotification(`🛋️ ปลดล็อก ${name} แล้ว!`);
+      } else {
+        showNotification("❌ เหรียญไม่พอครับ!");
+      }
+    }
+
+    function renderDesktopToys() {
+      const shelf = document.getElementById('desktopDecorShelf');
+      shelf.innerHTML = '';
+      ownedToys.forEach(t => {
+        shelf.innerHTML += `<div class="p-2 bg-black/25 rounded-xl border border-white/10 flex flex-col items-center justify-center min-h-[50px] sm:min-h-[55px]"><span class="text-lg sm:text-xl">${t.emoji}</span><span class="text-[8px] sm:text-[9px] opacity-75 truncate w-full">${t.name}</span></div>`;
+      });
+    }
+
+    function updateStatsUI() {
+      document.getElementById('coinBalance').innerText = window.coins;
+      document.getElementById('profileCoinVal').innerText = `${window.coins} 🪙`;
+      document.getElementById('profileLevelVal').innerText = `LV ${window.petLevel} 🐾`;
+      document.getElementById('profileDocsVal').innerText = `${docsProcessedCount} รายการ`;
+      document.getElementById('petExpBar').style.width = `${window.petExp}%`;
+      document.getElementById('lblDecorCount').innerText = `ปลดล็อกแล้ว ${ownedToys.length} ชิ้น`;
+    }
+
+    function renderStudyHubFeed() {
+      const feed = document.getElementById('studyHubFeed');
+      if (!feed) return;
+      feed.innerHTML = '';
+      window.studyHubPosts.forEach(p => {
+        feed.innerHTML += `
+          <div class="p-4 sm:p-5 rounded-3xl cozy-card border border-white/10 space-y-2">
+            <span class="text-[9px] sm:text-[10px] bg-blue-500 text-white px-2 py-0.5 rounded-full font-bold">Open Study Item</span>
+            <h4 class="font-bold text-xs sm:text-sm">${p.title}</h4>
+            <p class="text-xs opacity-80 leading-relaxed">${p.content}</p>
+            <span class="text-[9px] sm:text-[10px] opacity-60 block pt-0.5">ผู้แบ่งปัน: ${p.author || 'ไม่ระบุตัวตน'}</span>
+          </div>
+        `;
+      });
+    }
+
+    function submitPublishStudy() {
+      const title = document.getElementById('pubTitle').value;
+      const content = document.getElementById('pubContent').value;
+      if (!title || !content) return;
+
+      const authorName = currentUser ? currentUser.name : "ผู้ใช้งาน";
+      window.studyHubPosts.unshift({ id: Date.now(), title, content, author: authorName });
+
+      closePublishModal();
+      renderStudyHubFeed();
+      showNotification("🌍 เผยแพร่ความรู้ลงคลังสำเร็จ!");
+    }
+
+    function startFocusTimer() {
+      if (isTimerActive) return;
+      isTimerActive = true;
+      let remaining = totalFocusSeconds;
+      focusCountDown = setInterval(() => {
+        remaining--;
+        let m = Math.floor(remaining / 60);
+        let s = remaining % 60;
+        document.getElementById('timerClock').innerText = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+        if (remaining <= 0) {
+          clearInterval(focusCountDown);
+          isTimerActive = false;
+          window.coins += 50;
+          updateStatsUI();
+          triggerMemeBreak();
+        }
+      }, 1000);
+    }
+
+    function resetFocusTimer() {
+      clearInterval(focusCountDown);
+      isTimerActive = false;
+      document.getElementById('timerClock').innerText = "25:00";
+    }
+
+    function setCustomTimerMinutes() {
+      const mins = parseInt(document.getElementById('customMinutesInput').value) || 25;
+      totalFocusSeconds = mins * 60;
+      document.getElementById('timerClock').innerText = `${mins.toString().padStart(2,'0')}:00`;
+    }
+
+    function triggerMemeBreak() { 
+      document.getElementById('lblMemeTitle').innerText = `พักสายตากับน้อง ${mascotState.name}!`;
+      document.getElementById('lblMemeDesc').innerText = `"ลุกขึ้นยืดกล้ามเนื้อและผ่อนคลายสายตา 20 วินาที เพื่อสุขภาพที่ดีน้า ${mascotState.emoji}"`;
+      document.getElementById('memePopup').classList.remove('hidden'); 
+    }
+    
+    function dismissMemePopup() { document.getElementById('memePopup').classList.add('hidden'); }
+    function clickPetToInteract() { window.coins += 2; window.petExp += 5; updateStatsUI(); showNotification(`🐾 ${mascotState.name} ดีใจมาก!`); }
+
+    function showNotification(text) {
+      const toast = document.createElement('div');
+      toast.className = "fixed bottom-20 right-4 bg-slate-900 text-white border border-slate-700 text-xs px-3.5 py-2.5 rounded-2xl shadow-xl z-50 animate-bounce max-w-xs";
+      toast.innerText = text;
+      document.body.appendChild(toast);
+      setTimeout(() => { toast.remove(); }, 3500);
+    }
+
+    window.onload = function() {
+      updateApiKeyStatusUI();
+      renderAuthHeaderUI();
+      updateMascotUI();
+      updateStatsUI();
+      renderDesktopToys();
+      if (window.lucide) {
+        lucide.createIcons();
+      }
+    }
+  </script>
+</body>
+</html>
+
